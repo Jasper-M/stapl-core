@@ -11,33 +11,33 @@ object FullPolicyTest extends Templates {
   }
   object res extends Resource {
     val type_ = Attribute[String]("type")
-    val owner_withdrawn_consents = Attribute[List[String]]("owner_withdrawn_consents")
-    val operator_triggered_emergency = Attribute[Boolean]("operator_triggered_emergency")
-    val indicates_emergency = Attribute[Boolean]("indicates_emergency")
+    val owner_withdrawn_consents = Attribute[List[String]]
+    val operator_triggered_emergency = Attribute[Boolean]
+    val indicates_emergency = Attribute[Boolean]
     val owner_id = Attribute[String]("owner:id")
     val owner_responsible_physicians = Attribute[List[String]]("owner:responsible_physicians")
     val owner_discharged = Attribute[Boolean]("owner:discharged")
     val owner_discharged_dateTime = Attribute[LocalDateTime]("owner:discharged_dateTime")
-    val patient_status = Attribute[String]("patient_status")
-    val created = Attribute[LocalDateTime]("created")
+    val patient_status = Attribute[String]
+    val created = Attribute[LocalDateTime]
   }
   object sub extends Subject {
-    val roles = Attribute[List[String]]("roles")
-    val triggered_breaking_glass = Attribute[Boolean]("triggered_breaking_glass")
-    val department = Attribute[String]("department")
-    val current_patient_in_consultation = Attribute[String]("current_patient_in_consultation")
-    val treated_in_last_six_months = Attribute[List[String]]("treated_in_last_six_months")
-    val primary_patients = Attribute[List[String]]("primary_patients")
-    val is_head_physician = Attribute[Boolean]("is_head_physician")
-    val treated = Attribute[List[String]]("treated")
-    val treated_by_team = Attribute[List[String]]("treated_by_team")
-    val admitted_patients_in_care_unit = Attribute[List[String]]("admitted_patients_in_care_unit")
-    val shift_start = Attribute[LocalDateTime]("shift_start")
-    val shift_stop = Attribute[LocalDateTime]("shift_stop")
-    val location = Attribute[String]("location")
-    val admitted_patients_in_nurse_unit = Attribute[List[String]]("admitted_patients_in_nurse_unit")
-    val allowed_to_access_pms = Attribute[Boolean]("allowed_to_access_pms")
-    val responsible_patients = Attribute[List[String]]("responsible_patients")
+    val roles = Attribute[List[String]]
+    val triggered_breaking_glass = Attribute[Boolean]
+    val department = Attribute[String]
+    val current_patient_in_consultation = Attribute[String]
+    val treated_in_last_six_months = Attribute[List[String]]
+    val primary_patients = Attribute[List[String]]
+    val is_head_physician = Attribute[Boolean]
+    val treated = Attribute[List[String]]
+    val treated_by_team = Attribute[List[String]]
+    val admitted_patients_in_care_unit = Attribute[List[String]]
+    val shift_start = Attribute[LocalDateTime]
+    val shift_stop = Attribute[LocalDateTime]
+    val location = Attribute[String]
+    val admitted_patients_in_nurse_unit = Attribute[List[String]]
+    val allowed_to_access_pms = Attribute[Boolean]
+    val responsible_patients = Attribute[List[String]]
   }
   object act extends Action
   

@@ -39,7 +39,7 @@ import scala.language.experimental.macros
 import scala.collection.mutable.Map
 import scala.collection.mutable.Buffer
 import scala.reflect.macros.blackbox.Context
-import scala.reflect.runtime.universe.{TypeTag, typeTag}
+import scala.reflect.runtime.universe.{TypeTag, typeOf}
 
 class AttributeDeclarationException(message: String = null, cause: Throwable = null) extends RuntimeException(message, cause) 
 
@@ -56,19 +56,27 @@ class AttributeDeclarationException(message: String = null, cause: Throwable = n
  * }
  * }}}
  * 
- * TODO mechanism is needed so attribute types are known (to the compiler) at compile time
+ * !!!!!!!!!!!!!!
+ * !!
+ * !! TODO this should be part of dsl
+ * !!
+ * !!!!!!!!!!!!!!
  */
 abstract class AttributeContainer (cType: AttributeContainerType, attributes: Map[String, Attribute[_]]) {
 
   final def this(cType: AttributeContainerType) = this(cType, Map())
   
   protected final def Attribute[T : TypeTag](name: String): Attribute[T] = {
-    val attribute = new Attribute[T](cType, name, typeTag[T].tpe)
+    val attribute = new Attribute[T](cType, name, typeOf[T])
     set(name, attribute)
     attribute
   }
   
-  protected final def Attribute[T]: Attribute[T] = macro AttributeContainer.attributeMacro[T]
+  protected final def Attribute[T : TypeTag](implicit name: sourcecode.Name): Attribute[T] = {
+    val attribute = new Attribute[T](cType, name.value, typeOf[T])
+    set(name.value, attribute)
+    attribute
+  }
   
   final private def set(name: String, attribute: Attribute[_]) {
     if(attributes.contains(name)) {
@@ -85,15 +93,6 @@ abstract class AttributeContainer (cType: AttributeContainerType, attributes: Ma
   }
   
   def allAttributes: Seq[Attribute[_]] = attributes.values.toSeq
-}
-
-object AttributeContainer {
-  
-  def attributeMacro[T : c.WeakTypeTag](c: Context) = {
-    import c.universe._
-    val name = c.internal.enclosingOwner.fullName.split('.').last
-    q"this.Attribute[${weakTypeOf[T]}]($name)"
-  }
 }
 
 /**
