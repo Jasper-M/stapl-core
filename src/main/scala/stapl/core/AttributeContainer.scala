@@ -73,9 +73,7 @@ abstract class AttributeContainer (cType: AttributeContainerType, attributes: Ma
   }
   
   protected final def Attribute[T : TypeTag](implicit name: sourcecode.Name): Attribute[T] = {
-    val attribute = new Attribute[T](cType, name.value, typeOf[T])
-    set(name.value, attribute)
-    attribute
+    Attribute(name.value)
   }
   
   final private def set(name: String, attribute: Attribute[_]) {
