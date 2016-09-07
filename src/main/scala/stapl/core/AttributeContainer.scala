@@ -65,14 +65,14 @@ class AttributeDeclarationException(message: String = null, cause: Throwable = n
 abstract class AttributeContainer (cType: AttributeContainerType, attributes: Map[String, Attribute[_]]) {
 
   final def this(cType: AttributeContainerType) = this(cType, Map())
-  
-  protected final def Attribute[T : TypeTag](name: String): Attribute[T] = {
+
+  protected final def Attribute[T: TypeTag](name: String): Attribute[T] = {
     val attribute = new Attribute[T](cType, name, typeOf[T])
     set(name, attribute)
     attribute
   }
-  
-  protected final def Attribute[T : TypeTag](implicit name: sourcecode.Name): Attribute[T] = {
+
+  protected final def Attribute[T: TypeTag](implicit name: sourcecode.Name): Attribute[T] = {
     Attribute(name.value)
   }
   

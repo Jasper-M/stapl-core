@@ -87,7 +87,7 @@ class Rule(id: String)(val effect: Effect,
       debug(s"FLOW: Rule #$fqid was NotApplicable because of target")
       Result(NotApplicable)
     } else {
-      if (condition.evaluate(ctx)) {
+      if (condition.getConcreteValue(ctx)) {
         debug(s"FLOW: Rule #$fqid returned $effect with obligations $obligationActions")
         Result(effect, obligationActions map { _.getConcrete(ctx) })
       } else {
@@ -141,7 +141,7 @@ class Policy(id: String)(val target: Expression = LiteralExpression(true), val p
     }
   }
 
-  override def isApplicable(ctx: EvaluationCtx): Boolean = target.evaluate(ctx)
+  override def isApplicable(ctx: EvaluationCtx): Boolean = target.getConcreteValue(ctx)
 
   //override def allIds: List[String] = id :: subpolicies.flatMap(_.allIds)
 

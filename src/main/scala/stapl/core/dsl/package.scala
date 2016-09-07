@@ -16,10 +16,8 @@
 
 package stapl.core
 
-import stapl.core.typeclasses.impl.Instances
-import stapl.core.typeclasses.impl.Syntax
 
-package object dsl extends DSL with Instances with Syntax with JodaTime {
+package object dsl extends DSL with JodaTime {
   
   object any2stringadd // DIE any2stringadd DIE !!!
   

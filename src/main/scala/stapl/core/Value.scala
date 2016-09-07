@@ -44,22 +44,15 @@ import scala.language.implicitConversions
  * @tparam T The type of the concrete value this Value represents.
  */
 trait Value[T] {
+  
   def getConcreteValue(ctx: EvaluationCtx): T
 }
 
 object Value {
-  /**
-   * Wraps a concrete value of type T in a Value[T].
-   */
-  def apply[T](something: T) = new Value[T] { 
-    def getConcreteValue(ctx: EvaluationCtx): T = something
-    override def toString = s"Value(${something.toString})"
+  
+  def apply[T](f: EvaluationCtx => T): Value[T] = new Value[T] {
+    def getConcreteValue(ctx: EvaluationCtx): T = f(ctx)
   }
   
-  implicit def any2Value[T](t: T): Value[T] = {
-    require(!t.isInstanceOf[Value[_]])
-    Value(t)
-  }
-  
-  implicit def value2expression(value: Value[Boolean]): Expression = ValueExpression(value)
+  def apply[T](value: T): Value[T] = apply(_ => value)
 }
