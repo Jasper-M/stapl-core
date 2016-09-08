@@ -17,6 +17,11 @@
 package stapl.core
 
 import stapl.core.dslimpl._
+import scala.language.experimental.macros
+import scala.reflect.macros.blackbox.Context
+import scala.annotation.compileTimeOnly
+import scala.language.implicitConversions
+import scala.annotation.StaticAnnotation
 
 object dsl extends DSL with JodaTime {
   
@@ -52,4 +57,51 @@ object dsl extends DSL with JodaTime {
   trait Environment extends EnvironmentTemplate
   
   type Expression = stapl.core.Expression
+  
+  
+  
+  
+
+  
+  private final class staplFromValue extends StaticAnnotation
+  
+  @compileTimeOnly("fromValue should not be called")
+  @staplFromValue
+  implicit def fromValue[T](v: Value[T]): T = ???
+
+  
+  implicit def convertToValue[T](expr: T): Value[T] = macro Macros.ruleMacro
+  
+  object Macros {
+    
+    def ruleMacro(c: Context)(expr: c.Tree): c.Tree = {
+      import c.universe._
+      
+      val typeOfValue = typeOf[Value[_]]
+      val ctxName = TermName(c.freshName())
+      
+      val transformer = new Transformer {
+        private def isStaplFromValue(symbol: Symbol): Boolean =
+          symbol.isMethod && symbol.asMethod.annotations.exists(a => a.tree.tpe =:= typeOf[staplFromValue])
+        private def isOfTypeValue(tree: c.Tree): Boolean =
+          tree.tpe != null && tree.tpe <:< typeOfValue
+        override def transform(tree: c.Tree) = tree match {
+          case q"$method[..$_]($value)" if isStaplFromValue(method.symbol) => 
+            q"$value.getConcreteValue($ctxName)"
+          case _ if isOfTypeValue(tree) => 
+            q"$tree.getConcreteValue($ctxName)"
+          case _ => super.transform(tree)
+        }
+      }
+      
+      val transformed = transformer.transform(expr)
+      
+      /*if(transformed.exists(t => t.tpe != null && t.tpe <:< typeOf[Value[_]]))
+        c.error(c.enclosingPosition, "A Value did not get converted!")*/
+      
+      val ctxParam = ValDef(Modifiers(Flag.PARAM), ctxName, TypeTree(), EmptyTree)
+      val result = q"_root_.stapl.core.Value($ctxParam => $transformed)"
+      c.untypecheck(result)
+    }
+  }
 }
