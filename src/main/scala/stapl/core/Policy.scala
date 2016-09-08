@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Jasper Moeys, iMinds-DistriNet, KU Leuven
+ * Copyright 2016 Jasper Moeys, iMinds-DistriNet, KU Leuven
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,25 +14,6 @@
  * limitations under the License.
  */
 
-/**
- *    Copyright 2014 KU Leuven Research and Developement - iMinds - Distrinet
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *        http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
- *
- *    Administrative Contact: dnet-project-office@cs.kuleuven.be
- *    Technical Contact: maarten.decat@cs.kuleuven.be
- *    Author: maarten.decat@cs.kuleuven.be
- */
 package stapl.core
 
 import grizzled.slf4j.Logging
@@ -78,7 +59,7 @@ abstract class AbstractPolicy(val id: String) {
  * Represents one rule.
  */
 class Rule(id: String)(val effect: Effect,
-  val condition: Expression = LiteralExpression(true), val obligationActions: List[ObligationAction] = List.empty)
+  val condition: Expression, val obligationActions: List[ObligationAction])
   extends AbstractPolicy(id) with Logging {
 
   override def evaluate(ctx: EvaluationCtx): Result = {
@@ -110,8 +91,8 @@ class Rule(id: String)(val effect: Effect,
 /**
  * Represents a policy of one or more rules and/or subpolicies.
  */
-class Policy(id: String)(val target: Expression = LiteralExpression(true), val pca: CombinationAlgorithm,
-  val subpolicies: List[AbstractPolicy], val obligations: List[Obligation] = List.empty)
+class Policy(id: String)(val target: Expression, val pca: CombinationAlgorithm,
+  val subpolicies: List[AbstractPolicy], val obligations: List[Obligation])
   extends AbstractPolicy(id) with Logging {
 
   // assign this PolicySet as parent to the children

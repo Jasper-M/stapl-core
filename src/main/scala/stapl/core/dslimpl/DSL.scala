@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Jasper Moeys, iMinds-DistriNet, KU Leuven
+ * Copyright 2016 Jasper Moeys, iMinds-DistriNet, KU Leuven
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package stapl.core.dsl
+package stapl.core.dslimpl
 
 import stapl.core._
 import scala.language.implicitConversions
@@ -45,14 +45,14 @@ trait DSL {
       new Rule(id)(t.effect, t.condition, List(t.obligationActions: _*))
   
     def :=(t: EffectAndCondition): Rule =
-      new Rule(id)(t.effect, t.condition)
+      new Rule(id)(t.effect, t.condition, List.empty)
   
     def :=(t: EffectAndObligationActions): Rule =
-      new Rule(id)(t.effect, LiteralExpression(true), List(t.obligationActions: _*))
+      new Rule(id)(t.effect, Value(true), List(t.obligationActions: _*))
   
     def :=(effectKeyword: EffectKeyword): Rule = effectKeyword match {
-      case `deny` => new Rule(id)(Deny)
-      case `permit` => new Rule(id)(Permit)
+      case `deny` => new Rule(id)(Deny, Value(true), List.empty)
+      case `permit` => new Rule(id)(Permit, Value(true), List.empty)
     }
   
   }
@@ -63,7 +63,7 @@ trait DSL {
       new Policy(id)(t.target, t.pca, t.subpolicies, t.obligations)
   
     def :=(t: TargetPCAAndSubpolicies): Policy =
-      new Policy(id)(t.target, t.pca, List(t.subpolicies: _*))
+      new Policy(id)(t.target, t.pca, List(t.subpolicies: _*), List.empty)
   }
   
   class ObligationActionWithOn(val obligationAction: ObligationAction) {
@@ -129,48 +129,21 @@ trait DSL {
       new TargetAndPCA(target, pca)
   
   }
-  object when {
-    def apply(target: Expression = LiteralExpression(true)): OnlyTarget =
-      new OnlyTarget(target)
-  }
-  object apply {
+  def when(target: Expression): OnlyTarget = new OnlyTarget(target)
   
-    /**
-     * If no target is given for a policy set
-     */
+  object always {
     def apply(pca: CombinationAlgorithm): TargetAndPCA =
-      new TargetAndPCA(LiteralExpression(true), pca)
-  
-    def PermitOverrides(subpolicies: OnlySubpolicies): TargetPCAAndSubpolicies =
-      new TargetPCAAndSubpolicies(LiteralExpression(true), stapl.core.PermitOverrides, subpolicies.subpolicies: _*)
-  
-    def DenyOverrides(subpolicies: OnlySubpolicies): TargetPCAAndSubpolicies =
-      new TargetPCAAndSubpolicies(LiteralExpression(true), stapl.core.DenyOverrides, subpolicies.subpolicies: _*)
-  
-    def FirstApplicable(subpolicies: OnlySubpolicies): TargetPCAAndSubpolicies =
-      new TargetPCAAndSubpolicies(LiteralExpression(true), stapl.core.FirstApplicable, subpolicies.subpolicies: _*)
+      new TargetAndPCA(Value(true), pca)
   }
+  
   class OnlySubpolicies(val subpolicies: AbstractPolicy*)
-  object to {
+  def to(subpolicies: AbstractPolicy*): OnlySubpolicies = new OnlySubpolicies(subpolicies: _*)
   
-    def apply(subpolicies: AbstractPolicy*): OnlySubpolicies =
-      new OnlySubpolicies(subpolicies: _*)
-  }
-  object iff {
-    /**
-     * Just to add the keyword "iff"
-     */
-    def apply(condition: Expression): Expression =
-      condition
-  }
-  object Rule { // not really a companion object of Rule, but the start of the natural DSL for policies
-    def apply(id: String) =
-      new OnlyIdRule(id)
-  }
-  object Policy {
-    def apply(id: String) =
-      new OnlyIdPolicy(id)
-  }
+  def iff(condition: Expression): Expression = condition
+  
+  def Rule(id: String) = new OnlyIdRule(id)
+  
+  def Policy(id: String) = new OnlyIdPolicy(id)
   
   
   object log {

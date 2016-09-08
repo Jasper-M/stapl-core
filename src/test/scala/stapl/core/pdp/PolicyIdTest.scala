@@ -54,7 +54,7 @@ class PolicyIdTest extends AssertionsForJUnit{
     val rule2 = Rule("rule2") := deny
     
     val policy1 = 
-      Policy("policy1") := apply PermitOverrides to (
+      Policy("policy1") := always apply PermitOverrides to (
         rule1,
         rule2
       )
@@ -67,7 +67,7 @@ class PolicyIdTest extends AssertionsForJUnit{
     val rule2 = Rule("rule2") := deny
     
     val policy1 = 
-      Policy("policy1") := apply PermitOverrides to (
+      Policy("policy1") := always apply PermitOverrides to (
         rule1,
         rule2
       )
@@ -84,7 +84,7 @@ class PolicyIdTest extends AssertionsForJUnit{
     assertEquals("rule2", rule2.fqid)
     
     val policy1 = 
-      Policy("policy1") := apply PermitOverrides to (
+      Policy("policy1") := always apply PermitOverrides to (
         rule1,
         rule2
       )

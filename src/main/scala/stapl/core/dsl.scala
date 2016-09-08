@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Jasper Moeys, iMinds-DistriNet, KU Leuven
+ * Copyright 2016 Jasper Moeys, iMinds-DistriNet, KU Leuven
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,18 @@
 
 package stapl.core
 
+import stapl.core.dslimpl._
 
-package object dsl extends DSL with JodaTime {
+object dsl extends DSL with JodaTime {
   
   object any2stringadd // DIE any2stringadd DIE !!!
   
   /**
    * You might want to manually wrap something in a Value. Use with care.
    */
-  @inline def Value[T](something: T) = stapl.core.Value.apply[T](something)
   
-
+  type CombinationAlgorithm = stapl.core.CombinationAlgorithm
+  
   val PermitOverrides = stapl.core.PermitOverrides
   val DenyOverrides = stapl.core.DenyOverrides
   val FirstApplicable = stapl.core.FirstApplicable
@@ -50,8 +51,5 @@ package object dsl extends DSL with JodaTime {
   trait Action extends ActionTemplate
   trait Environment extends EnvironmentTemplate
   
-  object templating {
-    type Expression = stapl.core.Expression
-    type Value[T] = stapl.core.Value[T]
-  }
+  type Expression = stapl.core.Expression
 }

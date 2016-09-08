@@ -2,7 +2,6 @@ package stapl.test
 
 trait Templates {
   import stapl.core.dsl._
-  import templating._
   
   
   def OnlyPermitIff(id: String)(target: Expression)(condition: Expression) =
