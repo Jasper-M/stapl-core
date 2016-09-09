@@ -77,7 +77,7 @@ object dsl extends DSL with JodaTime {
     def ruleMacro(c: Context)(expr: c.Tree): c.Tree = {
       import c.universe._
       
-      val typeOfValue = typeOf[Value[_]]
+      val typeOfValue = typeOf[Value[_]] // typeOf[Value[_]] is unknown inside Transformer...
       val ctxName = TermName(c.freshName())
       
       val transformer = new Transformer {
@@ -94,14 +94,15 @@ object dsl extends DSL with JodaTime {
         }
       }
       
-      val transformed = transformer.transform(expr)
+      import org.scalamacros.resetallattrs._
+      val transformed = c.resetAllAttrs(transformer.transform(expr))
       
       /*if(transformed.exists(t => t.tpe != null && t.tpe <:< typeOf[Value[_]]))
         c.error(c.enclosingPosition, "A Value did not get converted!")*/
       
-      val ctxParam = ValDef(Modifiers(Flag.PARAM), ctxName, TypeTree(), EmptyTree)
+      val ctxParam = q"val $ctxName = $EmptyTree" //ValDef(Modifiers(Flag.PARAM), ctxName, TypeTree(), EmptyTree)
       val result = q"_root_.stapl.core.Value($ctxParam => $transformed)"
-      c.untypecheck(result)
+      result
     }
   }
 }
