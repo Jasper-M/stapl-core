@@ -7,7 +7,7 @@ object FullPolicyTest extends Templates {
   import stapl.core.dsl._
   
   object env extends Environment {
-    val currentDateTime = Attribute[LocalDateTime]("currentDateTime")
+    val currentDateTime = Attribute[LocalDateTime]
   }
   object res extends Resource {
     val type_ = Attribute[String]("type")
@@ -48,7 +48,7 @@ object FullPolicyTest extends Templates {
     Policy("policy:1") := when (sub.roles contains "medical_personnel") apply PermitOverrides to (
         Rule("consent") := deny iff (res.owner_withdrawn_consents contains sub.id),
         Rule("breaking-glass") := permit iff (sub.triggered_breaking_glass) performing (log(sub.id + " performed breaking-the-glass procedure"))
-    ) performing (log("permit because of breaking-the-glass procedure") on Permit),
+    ) performing (log("permit because of breaking-the-glass procedure") on permit),
     
     // Only physicians, nurses and patients can access the monitoring system.
     Rule("policy:2") := deny iff !((sub.roles contains "nurse") || (sub.roles contains "physician") || (sub.roles contains "patient")),
@@ -105,7 +105,7 @@ object FullPolicyTest extends Templates {
       Rule("policy:16") := deny iff !(sub.location == "hospital"),
       
       // Nurses can only view the patient's status of the last five days.
-      Rule("policy:17") := deny iff !(env.currentDateTime.compareTo(res.created plus 5.days) <= 0),
+      Rule("policy:17") := deny iff !(env.currentDateTime isBefore (res.created plus 5.days)),
       
       // For nurses of cardiology department: they can only view the patient status of a patient 
       // in their nurse unit for whom they are assigned responsible, up to three days after they were discharged.

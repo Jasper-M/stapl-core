@@ -66,13 +66,13 @@ trait DSL {
       new Policy(id)(t.target, t.pca, List(t.subpolicies: _*), List.empty)
   }
   
-  class ObligationActionWithOn(val obligationAction: ObligationAction) {
-  
-    def on(effect: Effect): Obligation =
-      new Obligation(obligationAction, effect)
+  implicit class ObligationActionWithOn(val obligationAction: ObligationAction) {
+    def on(effect: EffectKeyword): Obligation = effect match {
+      case `deny` => new Obligation(obligationAction, Deny)
+      case `permit` => new Obligation(obligationAction, Permit)
+    }
   }
   
-  implicit def obligationAction2ObligationActionWithOn(oa: ObligationAction): ObligationActionWithOn = new ObligationActionWithOn(oa)
   
   class EffectAndCondition(val effect: Effect, val condition: Expression) {
   
