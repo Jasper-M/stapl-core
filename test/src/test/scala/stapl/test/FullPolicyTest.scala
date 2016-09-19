@@ -1,6 +1,24 @@
 package stapl.test
 
 import org.joda.time.LocalDateTime
+import scala.reflect.runtime.universe
+import stapl.core.dsl.Action
+import stapl.core.dsl.DenyOverrides
+import stapl.core.dsl.DurationBuilder
+import stapl.core.dsl.Environment
+import stapl.core.dsl.FirstApplicable
+import stapl.core.dsl.ObligationActionWithOn
+import stapl.core.dsl.PermitOverrides
+import stapl.core.dsl.Policy
+import stapl.core.dsl.Resource
+import stapl.core.dsl.Rule
+import stapl.core.dsl.Subject
+import stapl.core.dsl.convertToValue
+import stapl.core.dsl.deny
+import stapl.core.dsl.fromValue
+import stapl.core.dsl.log
+import stapl.core.dsl.permit
+import stapl.core.dsl.when
 
 object FullPolicyTest extends Templates {
 

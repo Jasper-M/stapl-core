@@ -27,17 +27,13 @@ object dsl extends DSL with JodaTime {
   
   object any2stringadd // DIE any2stringadd DIE !!!
   
-  /**
-   * You might want to manually wrap something in a Value. Use with care.
-   */
-  
   type CombinationAlgorithm = stapl.core.CombinationAlgorithm
   
   val PermitOverrides = stapl.core.PermitOverrides
   val DenyOverrides = stapl.core.DenyOverrides
   val FirstApplicable = stapl.core.FirstApplicable
-  val Permit = stapl.core.Permit
-  val Deny = stapl.core.Deny
+  /*val Permit = stapl.core.Permit
+  val Deny = stapl.core.Deny*/
   
   
   private[dsl] abstract class SubjectTemplate extends AttributeContainer(SUBJECT) {
@@ -80,6 +76,14 @@ object dsl extends DSL with JodaTime {
       val typeOfValue = typeOf[Value[_]] // typeOf[Value[_]] is unknown inside Transformer...
       val ctxName = TermName(c.freshName())
       
+      var values: List[(TermName, c.Tree)] = Nil
+      
+      def registerValue(value: c.Tree): c.Tree = {
+        val name = TermName(c.freshName())
+        values = (name, value) :: values
+        q"$name"
+      }
+      
       val transformer = new Transformer {
         private def isStaplFromValue(symbol: Symbol): Boolean =
           symbol.isMethod && symbol.asMethod.annotations.exists(a => a.tree.tpe =:= typeOf[staplFromValue])
@@ -87,9 +91,11 @@ object dsl extends DSL with JodaTime {
           tree.tpe != null && tree.tpe <:< typeOfValue
         override def transform(tree: c.Tree) = tree match {
           case q"$method[..$_]($value)" if isStaplFromValue(method.symbol) => 
-            q"$value.getConcreteValue($ctxName)"
+            val name = registerValue(value)
+            q"$name.getConcreteValue($ctxName)"
           case _ if isOfTypeValue(tree) => 
-            q"$tree.getConcreteValue($ctxName)"
+            val name = registerValue(tree)
+            q"$name.getConcreteValue($ctxName)"
           case _ => super.transform(tree)
         }
       }
@@ -97,11 +103,11 @@ object dsl extends DSL with JodaTime {
       import org.scalamacros.resetallattrs._
       val transformed = c.resetAllAttrs(transformer.transform(expr))
       
-      /*if(transformed.exists(t => t.tpe != null && t.tpe <:< typeOf[Value[_]]))
-        c.error(c.enclosingPosition, "A Value did not get converted!")*/
+      val vals = values map { case (name, value) => q"val $name = $value" }
+      val names = values map (_._1)
       
       val ctxParam = q"val $ctxName = $EmptyTree" //ValDef(Modifiers(Flag.PARAM), ctxName, TypeTree(), EmptyTree)
-      val result = q"_root_.stapl.core.Value($ctxParam => $transformed)"
+      val result = q"..$vals; _root_.stapl.core.Value(_root_.scala.collection.immutable.Set(..$names), $ctxParam => $transformed)"
       result
     }
   }

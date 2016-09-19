@@ -18,7 +18,6 @@ package stapl.core.pdp
 
 import grizzled.slf4j.Logging
 import stapl.core.Attribute
-import stapl.core.AttributeContainerType
 import stapl.core.AttributeNotFoundException
 import stapl.core.PermitOverrides
 import stapl.core.DenyOverrides
@@ -106,7 +105,7 @@ class BasicEvaluationCtx(override val evaluationId: String, request: RequestCtx,
       case None => { // Not in the cache
         finder.find(this, attribute) match {
           case None =>
-            val entityId = attribute.cType match {
+            val entityId = attribute.category match {
               case SUBJECT => subjectId
               case RESOURCE => resourceId
               case ACTION => "ACTION??" // we don't support this

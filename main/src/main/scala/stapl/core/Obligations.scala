@@ -73,7 +73,7 @@ case class ChangeAttributeObligationAction[T](val attribute: Attribute[T], val v
     val changeType: AttributeChangeType) extends ObligationAction {
 
   def getConcrete(ctx: EvaluationCtx) = {
-    val entityId = attribute.cType match {
+    val entityId = attribute.category match {
       case SUBJECT => ctx.subjectId
       case RESOURCE => ctx.resourceId
       case _ => throw new IllegalArgumentException(s"You can only update SUBJECT and RESOURCE attributes. Given attribute: $attribute")

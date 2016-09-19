@@ -30,10 +30,10 @@ class AttributeDeclarationException(message: String = null, cause: Throwable = n
  * 
  * Usage example: 
  * {{{
- * object subject extends Subject {
- *   val foo = SimpleAttribute(String)
- *   val bar = ListAttribute(Number)
- *   val baz = SimpleAttribute("bazz", String)
+ * object subject extends AttributeContainer(Subject) {
+ *   val foo = Attribute[String]
+ *   val bar = Attribute[List[Int]]
+ *   val baz = Attribute[String]("bazz")
  * }
  * }}}
  * 
@@ -43,35 +43,15 @@ class AttributeDeclarationException(message: String = null, cause: Throwable = n
  * !!
  * !!!!!!!!!!!!!!
  */
-abstract class AttributeContainer (cType: AttributeContainerType, attributes: Map[String, Attribute[_]]) {
-
-  final def this(cType: AttributeContainerType) = this(cType, Map())
+abstract class AttributeContainer (category: Category) {
 
   protected final def Attribute[T: TypeTag](name: String): Attribute[T] = {
-    val attribute = new Attribute[T](cType, name, typeOf[T])
-    set(name, attribute)
-    attribute
+    new Attribute[T](category, name, typeOf[T])
   }
 
   protected final def Attribute[T: TypeTag](implicit name: sourcecode.Name): Attribute[T] = {
     Attribute(name.value)
   }
-  
-  final private def set(name: String, attribute: Attribute[_]) {
-    if(attributes.contains(name)) {
-      throw new AttributeDeclarationException(s"Error when assigning $cType.$name: already assigned")
-    }
-    attributes += name -> attribute   
-  }
-  
-  final def get(name: String): Attribute[_] = {
-    try attributes(name)
-    catch {
-      case _: NoSuchElementException => throw new AttributeDoesNotExistException(name)
-    }    
-  }
-  
-  def allAttributes: Seq[Attribute[_]] = attributes.values.toSeq
 }
 
 /**
@@ -79,8 +59,8 @@ abstract class AttributeContainer (cType: AttributeContainerType, attributes: Ma
  * 
  * TODO: extend this to support the container hierarchies as well?
  */
-sealed abstract class AttributeContainerType
-case object SUBJECT extends AttributeContainerType
-case object RESOURCE extends AttributeContainerType
-case object ENVIRONMENT extends AttributeContainerType
-case object ACTION extends AttributeContainerType
+sealed abstract class Category
+case object SUBJECT extends Category
+case object RESOURCE extends Category
+case object ENVIRONMENT extends Category
+case object ACTION extends Category

@@ -27,13 +27,17 @@ import scala.language.implicitConversions
 trait Value[T] {
   
   def getConcreteValue(ctx: EvaluationCtx): T
+  
+  private[core] def dependencies: Set[Attribute[_]]
 }
 
 object Value {
   
-  def apply[T](f: EvaluationCtx => T): Value[T] = new Value[T] {
+  def apply[T](deps: Set[Value[_]], f: EvaluationCtx => T): Value[T] = new Value[T] {
     def getConcreteValue(ctx: EvaluationCtx): T = f(ctx)
+    
+    private[core] lazy val dependencies = deps flatMap (_.dependencies)
   }
   
-  def apply[T](value: T): Value[T] = apply(_ => value)
+  def apply[T](value: T): Value[T] = apply(Set(), _ => value)
 }
