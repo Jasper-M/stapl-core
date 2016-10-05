@@ -55,7 +55,12 @@ object dsl extends DSL with JodaTime {
   type Expression = stapl.core.Expression
   
   
-  
+  implicit class AttributeWithProps[T](private val attribute: Attribute[T]) extends AnyVal {
+    def withProperties(properties: MetaProperty*): Attribute[T] = {
+      val newProps = attribute.props ++ properties.toSet
+      attribute.copy(props = newProps)
+    }
+  }
   
 
   

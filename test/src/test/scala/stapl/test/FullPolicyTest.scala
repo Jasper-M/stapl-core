@@ -19,13 +19,14 @@ import stapl.core.dsl.fromValue
 import stapl.core.dsl.log
 import stapl.core.dsl.permit
 import stapl.core.dsl.when
+import stapl.core.MetaProperty
 
 object FullPolicyTest extends Templates {
 
   import stapl.core.dsl._
   
   object env extends Environment {
-    val currentDateTime = Attribute[LocalDateTime]
+    val currentDateTime = Attribute[LocalDateTime].withProperties(MetaProperty.DontCache)
   }
   object res extends Resource {
     val type_ = Attribute[String]("type")

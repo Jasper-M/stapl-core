@@ -83,3 +83,6 @@ case class ChangeAttributeObligationAction[T](val attribute: Attribute[T], val v
 }
 case class ConcreteChangeAttributeObligationAction[T](val entityId: String, val attribute: Attribute[T], 
     val value: T, val changeType: AttributeChangeType) extends ConcreteObligationAction
+
+
+case class EvictObligationAction(attributes: Set[Attribute[_]]) extends SimpleObligationAction

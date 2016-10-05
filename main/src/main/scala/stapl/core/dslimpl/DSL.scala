@@ -167,4 +167,8 @@ trait DSL {
     def apply[T](attribute: Attribute[T], value: Value[T]) =
       new ChangeAttributeObligationAction(attribute, value, Append)
   }
+  
+  object evict {
+    def apply(attributes: Attribute[_]*) = EvictObligationAction(attributes.toSet)
+  }
 }
