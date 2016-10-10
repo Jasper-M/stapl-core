@@ -8,10 +8,8 @@ import org.scalatest.junit.AssertionsForJUnit
 import stapl.core.pdp.RemoteEvaluator
 import stapl.core.Attribute
 import stapl.core.CombinationAlgorithm
-import stapl.core.CombinationAlgorithmImplementation
 import stapl.core.pdp.EvaluationCtx
 import stapl.core.Value
-import scala.reflect.runtime.universe
 import stapl.core.dsl.Subject
 import stapl.core.dsl.convertToValue
 import stapl.core.dsl.fromValue
@@ -37,7 +35,6 @@ class ExpressionsTest extends AssertionsForJUnit {
     def remoteEvaluator: RemoteEvaluator = ???
     def cachedAttributes: Map[Attribute[_], Any] = ???
     def employedAttributes: Map[Attribute[_], Any] = ???
-    def getCombinationAlgorithmImplementation(algo: CombinationAlgorithm): CombinationAlgorithmImplementation = ???
     
     def findAttribute[T](attribute: Attribute[T]): T = f(attribute.name).asInstanceOf[T]
   }

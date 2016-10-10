@@ -16,128 +16,40 @@
 
 package stapl.core
 
-import scala.annotation.tailrec
-import stapl.core.pdp.EvaluationCtx
-import scala.concurrent.Future
-import scala.concurrent.Promise
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.collection.mutable.Map
-import scala.util.{ Try, Success, Failure }
 
-/**
- * *************************
- * WRAPPERS
- *
- * We separate the keywords from the implementation so that these can be overridden
- * at runtime by passing them to the evaluation context.
- */
-sealed trait CombinationAlgorithm {
-
-  def combine(policies: List[AbstractPolicy], ctx: EvaluationCtx): Result =
-    ctx.getCombinationAlgorithmImplementation(this).combine(policies, ctx)
+sealed trait CombinationDecision
+object CombinationDecision {
+  final case class Final(decision: Decision) extends CombinationDecision
+  final case class Temporary(decision: Decision) extends CombinationDecision
 }
 
-case object PermitOverrides extends CombinationAlgorithm
-case object DenyOverrides extends CombinationAlgorithm
-case object FirstApplicable extends CombinationAlgorithm
+trait CombinationAlgorithm {
 
-/**
- * **********************
- * IMPLEMENTATIONS
- */
-trait CombinationAlgorithmImplementation {
-
-  def combine(policies: List[AbstractPolicy], ctx: EvaluationCtx): Result
+  def combine(previous: Decision, recent: Decision): CombinationDecision
 }
 
-trait CombinationAlgorithmImplementationBundle {
-  def PermitOverrides: CombinationAlgorithmImplementation
-  def DenyOverrides: CombinationAlgorithmImplementation
-  def FirstApplicable: CombinationAlgorithmImplementation
-}
+import CombinationDecision._
 
-/**
- * The bundle of simple implementations: sequential evaluation.
- */
-object SimpleCombinationAlgorithmImplementationBundle extends CombinationAlgorithmImplementationBundle {
-
-  object PermitOverrides extends CombinationAlgorithmImplementation {
-
-    override def combine(policies: List[AbstractPolicy], ctx: EvaluationCtx): Result = {
-
-      var tmpResult = Result(NotApplicable)
-
-      for (policy <- policies) {
-        val Result(decision, obligationActions, _) = policy.evaluate(ctx)
-        // If a subpolicy returns Permit: return this result with its obligations,
-        //	do not evaluate the rest for other obligations. 
-        // TODO is this correct?
-        // If all subpolicies return Deny: combine all their obligations and return 
-        // 	them with Deny
-        // If all subpolicies return NotApplicable: return NotApplicable without obligations
-        // See XACML2 specs, Section 7.14
-        decision match {
-          case Permit =>
-            // we only need one Permit and only retain those obligations => jump out of the loop
-            return Result(decision, obligationActions)
-          case Deny =>
-            // retain all obligations of previous Denies
-            tmpResult = Result(Deny, tmpResult.obligationActions ::: obligationActions)
-          case NotApplicable => // nothing to do
-        }
-      }
-      // if we got here: return the tmpResult with Deny or NotApplicable
-      tmpResult
-    }
+case object PermitOverrides extends CombinationAlgorithm {
+  
+  def combine(previous: Decision, recent: Decision): CombinationDecision = recent match {
+    case Permit        => Final(Permit)
+    case Deny          => Temporary(Deny)
+    case NotApplicable => Temporary(previous)
   }
-
-  object DenyOverrides extends CombinationAlgorithmImplementation {
-
-    override def combine(policies: List[AbstractPolicy], ctx: EvaluationCtx): Result = {
-
-      var tmpResult = Result(NotApplicable)
-
-      for (policy <- policies) {
-        val Result(decision, obligationActions, _) = policy.evaluate(ctx)
-        // If a subpolicy returns Deny: return this result with its obligations,
-        //	do not evaluate the rest for other obligations. 
-        // TODO is this correct?
-        // If all subpolicies return Permit: combine all their obligations and return 
-        // 	them with Permit
-        // If all subpolicies return NotApplicable: return NotApplicable without obligations
-        // See XACML2 specs, Section 7.14
-        decision match {
-          case Deny =>
-            // we only need one Deny and only retain those obligations => jump out of the loop
-            return Result(decision, obligationActions)
-          case Permit =>
-            // retain all obligations of previous Permits
-            tmpResult = Result(Permit, tmpResult.obligationActions ::: obligationActions)
-          case NotApplicable => // nothing to do
-        }
-      }
-      // if we got here: return the tmpResult with Permit or NotApplicable
-      tmpResult
-    }
+}
+case object DenyOverrides extends CombinationAlgorithm {
+  
+  def combine(previous: Decision, recent: Decision): CombinationDecision = recent match {
+    case Deny          => Final(Deny)
+    case Permit        => Temporary(Permit)
+    case NotApplicable => Temporary(previous)
   }
-
-  object FirstApplicable extends CombinationAlgorithmImplementation {
-
-    override def combine(policies: List[AbstractPolicy], ctx: EvaluationCtx): Result = {
-
-      var tmpResult = Result(NotApplicable)
-
-      for (policy <- policies) {
-        val Result(decision, obligationActions, _) = policy.evaluate(ctx)
-        decision match {
-          case Permit | Deny =>
-            // we only need one Deny or Permit and only retain those obligations => jump out of the loop
-            return Result(decision, obligationActions)
-          case NotApplicable => // nothing to do
-        }
-      }
-      // if we got here: return the tmpResult with Permit or NotApplicable
-      tmpResult
-    }
+}
+case object FirstApplicable extends CombinationAlgorithm {
+  
+  def combine(previous: Decision, recent: Decision): CombinationDecision = recent match {
+    case Permit | Deny => Final(recent)
+    case NotApplicable => Temporary(previous)
   }
 }

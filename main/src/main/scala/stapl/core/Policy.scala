@@ -24,17 +24,7 @@ import stapl.core.pdp.EvaluationCtx
  * The basic constructors
  */
 abstract class AbstractPolicy(val id: String) {
-  var parent: Option[Policy] = None
-
-  /**
-   * Each element in the policy tree should only return Obligations which
-   * apply its decision.
-   */
-  def evaluate(ctx: EvaluationCtx): Result
-
-  // TODO remove this from AbstractPolicy, Policy and RemotePolicy (this is only to be used 
-  // internally in a Policy)
-  def isApplicable(ctx: EvaluationCtx): Boolean
+  protected[core] var parent: Option[Policy] = None
 
   //def allIds: List[String]
 
@@ -58,30 +48,9 @@ abstract class AbstractPolicy(val id: String) {
 /**
  * Represents one rule.
  */
-class Rule(id: String)(val effect: Effect,
+case class Rule(override val id: String)(val effect: Effect,
   val condition: Expression, val obligationActions: List[ObligationAction])
-  extends AbstractPolicy(id) with Logging {
-
-  override def evaluate(ctx: EvaluationCtx): Result = {
-    debug(s"FLOW: starting evaluation of Policy #$fqid (evaluation id #${ctx.evaluationId})")
-    if (!isApplicable(ctx)) {
-      debug(s"FLOW: Rule #$fqid was NotApplicable because of target")
-      Result(NotApplicable)
-    } else {
-      if (condition.getConcreteValue(ctx)) {
-        debug(s"FLOW: Rule #$fqid returned $effect with obligations $obligationActions")
-        Result(effect, obligationActions map { _.getConcrete(ctx) })
-      } else {
-        debug(s"FLOW: Rule #$fqid was NotApplicable because of condition")
-        Result(NotApplicable)
-      }
-    }
-  }
-
-  /**
-   * Rules always apply
-   */
-  override def isApplicable(ctx: EvaluationCtx): Boolean = true
+  extends AbstractPolicy(id) {
 
   //override def allIds: List[String] = List(id)
 
@@ -91,7 +60,7 @@ class Rule(id: String)(val effect: Effect,
 /**
  * Represents a policy of one or more rules and/or subpolicies.
  */
-class Policy(id: String)(val target: Expression, val pca: CombinationAlgorithm,
+case class Policy(override val id: String, val target: Expression, val pca: CombinationAlgorithm,
   val subpolicies: List[AbstractPolicy], val obligations: List[Obligation])
   extends AbstractPolicy(id) with Logging {
 
@@ -107,23 +76,6 @@ class Policy(id: String)(val target: Expression, val pca: CombinationAlgorithm,
     distinctIds.size == ids.size
   }*/
 
-  override def evaluate(ctx: EvaluationCtx): Result = {
-    debug(s"FLOW: starting evaluation of PolicySet #$fqid")
-    if (isApplicable(ctx)) {
-      val result = pca.combine(subpolicies, ctx)
-      // add applicable obligations of our own
-      val applicableObligationActions = result.obligationActions ::: obligations.filter(_.fulfillOn == result.decision).map(_.action.getConcrete(ctx))
-      val finalResult = Result(result.decision, applicableObligationActions)
-      debug(s"FLOW: PolicySet #$fqid returned $finalResult")
-      finalResult
-    } else {
-      debug(s"FLOW: PolicySet #$fqid was NotApplicable because of target")
-      Result(NotApplicable)
-    }
-  }
-
-  override def isApplicable(ctx: EvaluationCtx): Boolean = target.getConcreteValue(ctx)
-
   //override def allIds: List[String] = id :: subpolicies.flatMap(_.allIds)
 
   override def toString = {
@@ -138,23 +90,4 @@ class Policy(id: String)(val target: Expression, val pca: CombinationAlgorithm,
  *
  * TODO Do remote policy references reference the id or the fqid?
  */
-case class RemotePolicy(override val id: String) extends AbstractPolicy(id) with Logging {
-
-  override def evaluate(ctx: EvaluationCtx): Result = {
-    debug(s"FLOW: starting evaluation of Remote Policy #$fqid (evaluation id #${ctx.evaluationId})")
-    val result = ctx.remoteEvaluator.findAndEvaluate(id, ctx)
-    // TODO Filter obligations?
-    debug(s"FLOW: Remote Policy #$fqid returned $result")
-    result
-  }
-
-  /**
-   * This method shouldn't be called during the evaluation of this policy, but an implementation is
-   * provided for the case where one would like to know whether a policy is applicable in a certain
-   * EvalutionCtx without evaluating it (???).
-   */
-  override def isApplicable(ctx: EvaluationCtx): Boolean = {
-    warn("We are checking whether a remote policy is applicable without evaluating the policy. Are you sure this is what you want to do?")
-    ctx.remoteEvaluator.findAndIsApplicable(id, ctx)
-  }
-}
+case class RemotePolicy(override val id: String) extends AbstractPolicy(id)

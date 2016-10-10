@@ -23,6 +23,14 @@ import stapl.core.Result
 import scala.collection.mutable.ListBuffer
 import stapl.core.ObligationAction
 import stapl.core.ConcreteObligationAction
+import stapl.core.Policy
+import stapl.core.Rule
+import stapl.core.RemotePolicy
+import stapl.core.NotApplicable
+import stapl.core.Result
+import stapl.core.CombinationAlgorithm
+import stapl.core.CombinationDecision
+import grizzled.slf4j.Logging
 
 /**
  * Class used for representing a policy decision point (PDP). A PDP provides
@@ -31,7 +39,7 @@ import stapl.core.ConcreteObligationAction
 class PDP(policy: AbstractPolicy,
   attributeFinder: AttributeFinder = new AttributeFinder,
   obligationService: ObligationService = new ObligationService,
-  remoteEvaluator: RemoteEvaluator = new RemoteEvaluator) {
+  remoteEvaluator: RemoteEvaluator = new RemoteEvaluator) extends Logging {
 
   private val timestampGenerator = new SimpleTimestampGenerator
 
@@ -84,7 +92,7 @@ class PDP(policy: AbstractPolicy,
    * the fulfilled obligations from the result.
    */
   def evaluate(ctx: EvaluationCtx): Result = {
-    val result = policy.evaluate(ctx)
+    val result = evaluateAbstractPolicy(policy, ctx)
     // try to fulfill the obligations
     val remainingObligations = ListBuffer[ConcreteObligationAction]()
     for (obl <- result.obligationActions) {
@@ -94,5 +102,64 @@ class PDP(policy: AbstractPolicy,
     }
     // return the result with the remaining obligations
     new Result(result.decision, remainingObligations.toList, ctx.employedAttributes)
+  }
+  
+  private def evaluateAbstractPolicy(policy: AbstractPolicy, ctx: EvaluationCtx) = policy match {
+    case policy: Policy       => evaluatePolicy(policy, ctx)
+    case rule: Rule           => evaluateRule(rule, ctx)
+    case remote: RemotePolicy => evaluateRemotePolicy(remote, ctx)
+  }
+  
+  private def evaluatePolicy(policy: Policy, ctx: EvaluationCtx) = {
+    import policy._
+    debug(s"FLOW: starting evaluation of PolicySet #$fqid")
+    if (policyIsApplicable(policy, ctx)) {
+      val result = combinePolicies(subpolicies, pca, ctx)
+      // add applicable obligations of our own
+      val applicableObligationActions = result.obligationActions ::: obligations.filter(_.fulfillOn == result.decision).map(_.action.getConcrete(ctx))
+      val finalResult = Result(result.decision, applicableObligationActions)
+      debug(s"FLOW: PolicySet #$fqid returned $finalResult")
+      finalResult
+    } else {
+      debug(s"FLOW: PolicySet #$fqid was NotApplicable because of target")
+      Result(NotApplicable)
+    }
+  }
+  
+  private def combinePolicies(policies: List[AbstractPolicy], pca: CombinationAlgorithm, ctx: EvaluationCtx): Result = {
+    import CombinationDecision._
+    var tmpResult = Result(NotApplicable)
+    for(policy <- policies) {
+      val Result(currentDecision, obligationActions, _) = evaluateAbstractPolicy(policy, ctx)
+      pca.combine(tmpResult.decision, currentDecision) match {
+        case Temporary(decision) => tmpResult = Result(decision, tmpResult.obligationActions ::: obligationActions)
+        case Final(decision) => return Result(decision, obligationActions)
+      }
+    }
+    tmpResult
+  }
+  
+  private def policyIsApplicable(policy: Policy, ctx: EvaluationCtx): Boolean = policy.target.getConcreteValue(ctx)
+  
+  private def evaluateRule(rule: Rule, ctx: EvaluationCtx) = {
+    import rule._
+    debug(s"FLOW: starting evaluation of Policy #$fqid (evaluation id #${ctx.evaluationId})")
+    if (condition.getConcreteValue(ctx)) {
+      debug(s"FLOW: Rule #$fqid returned $effect with obligations $obligationActions")
+      Result(effect, obligationActions map { _.getConcrete(ctx) })
+    } else {
+      debug(s"FLOW: Rule #$fqid was NotApplicable because of condition")
+      Result(NotApplicable)
+    }
+  }
+  
+  private def evaluateRemotePolicy(policy: RemotePolicy, ctx: EvaluationCtx) = {
+    import policy._
+    debug(s"FLOW: starting evaluation of Remote Policy #$fqid (evaluation id #${ctx.evaluationId})")
+    val result = ctx.remoteEvaluator.findAndEvaluate(policy.id, ctx)
+    // TODO Filter obligations? 
+    //   - I don't think so?
+    debug(s"FLOW: Remote Policy #$fqid returned $result")
+    result
   }
 }

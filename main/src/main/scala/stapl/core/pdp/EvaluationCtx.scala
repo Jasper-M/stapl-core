@@ -19,14 +19,6 @@ package stapl.core.pdp
 import grizzled.slf4j.Logging
 import stapl.core.Attribute
 import stapl.core.AttributeNotFoundException
-import stapl.core.PermitOverrides
-import stapl.core.DenyOverrides
-import stapl.core.FirstApplicable
-import stapl.core.CombinationAlgorithm
-import stapl.core.CombinationAlgorithmImplementation
-import stapl.core.CombinationAlgorithmImplementationBundle
-import stapl.core.SimpleCombinationAlgorithmImplementationBundle
-import stapl.core.CombinationAlgorithmImplementationBundle
 import stapl.core.SUBJECT
 import stapl.core.RESOURCE
 import stapl.core.ACTION
@@ -52,8 +44,7 @@ trait EvaluationCtx {
   def cachedAttributes: Map[Attribute[_], Any]
   def employedAttributes: Map[Attribute[_], Any]
   protected[core] def findAttribute[T](attribute: Attribute[T]): T
-  protected[core] def getCombinationAlgorithmImplementation(algo: CombinationAlgorithm): CombinationAlgorithmImplementation
-
+  
   // TODO add type checking here
   //final def findAttribute(attribute: Attribute): ConcreteValue = 
 }
@@ -64,8 +55,7 @@ trait EvaluationCtx {
  * attribute values in a cache for this evaluation context.
  */
 class BasicEvaluationCtx(override val evaluationId: String, request: RequestCtx,
-  finder: AttributeFinder, override val remoteEvaluator: RemoteEvaluator,
-  bundle: CombinationAlgorithmImplementationBundle = SimpleCombinationAlgorithmImplementationBundle) extends EvaluationCtx with Logging {
+  finder: AttributeFinder, override val remoteEvaluator: RemoteEvaluator) extends EvaluationCtx with Logging {
 
   override val subjectId: String = request.subjectId
 
@@ -123,12 +113,4 @@ class BasicEvaluationCtx(override val evaluationId: String, request: RequestCtx,
     }
   }
 
-  /**
-   * Return the implementation of the requested combination algorithm.
-   */
-  def getCombinationAlgorithmImplementation(algo: CombinationAlgorithm): CombinationAlgorithmImplementation = algo match {
-    case PermitOverrides => bundle.PermitOverrides
-    case DenyOverrides => bundle.DenyOverrides
-    case FirstApplicable => bundle.FirstApplicable
-  }
 }

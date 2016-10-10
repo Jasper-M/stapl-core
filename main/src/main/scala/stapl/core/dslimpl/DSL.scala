@@ -60,10 +60,10 @@ trait DSL {
   class OnlyIdPolicy(private val id: String) {
   
     def :=(t: TargetPCASubpoliciesAndObligations): Policy =
-      new Policy(id)(t.target, t.pca, t.subpolicies, t.obligations)
+      new Policy(id, t.target, t.pca, t.subpolicies, t.obligations)
   
     def :=(t: TargetPCAAndSubpolicies): Policy =
-      new Policy(id)(t.target, t.pca, List(t.subpolicies: _*), List.empty)
+      new Policy(id, t.target, t.pca, List(t.subpolicies: _*), List.empty)
   }
   
   implicit class ObligationActionWithOn(val obligationAction: ObligationAction) {
