@@ -48,6 +48,10 @@ class PartialEvaluationPDP(policy: AbstractPolicy,
    */
   def this(policy: AbstractPolicy, remoteEvaluator: RemoteEvaluator) = this(policy, new ObligationService, remoteEvaluator)
 
+  
+  def expire(evaluationId: String) {
+    partials.remove(evaluationId)
+  }
 
   /**
    * Evaluate the policy of this PDP with given subject id, action id, resource id
