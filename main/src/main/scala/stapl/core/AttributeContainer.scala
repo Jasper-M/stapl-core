@@ -46,7 +46,7 @@ class AttributeDeclarationException(message: String = null, cause: Throwable = n
 abstract class AttributeContainer (category: Category) {
 
   protected final def Attribute[T: TypeTag](name: String): Attribute[T] = {
-    new Attribute[T](category, name, typeOf[T])
+    new Attribute[T](category, name)(typeOf[T])
   }
 
   protected final def Attribute[T: TypeTag](implicit name: sourcecode.Name): Attribute[T] = {

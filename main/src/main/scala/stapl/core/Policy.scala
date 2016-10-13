@@ -48,7 +48,7 @@ abstract class AbstractPolicy(val id: String) {
 /**
  * Represents one rule.
  */
-case class Rule(override val id: String)(val effect: Effect,
+case class Rule(override val id: String, val effect: Effect,
   val condition: Expression, val obligationActions: List[ObligationAction])
   extends AbstractPolicy(id) {
 

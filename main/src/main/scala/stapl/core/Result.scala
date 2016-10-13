@@ -21,8 +21,7 @@ package stapl.core
  * A result contains a decision and possibly obligation actions to be fulfilled.
  */
 case class Result(val decision: Decision, 
-    val obligationActions: List[ConcreteObligationAction] = List.empty, 
-    val employedAttributes: Map[Attribute[_],Any] = Map())
+    val obligationActions: List[ConcreteObligationAction] = List.empty)
 
 /**
  * Trait for representing a Decision ( = Permit, Deny or NotApplicable).

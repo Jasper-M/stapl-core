@@ -66,15 +66,15 @@ class PDP(policy: AbstractPolicy,
    * This will employ the attribute finder of this PDP.
    */
   def evaluate(subjectId: String, actionId: String,
-    resourceId: String, extraAttributes: (Attribute[_], Any)*): Result =
-    evaluate(new RequestCtx(subjectId, actionId, resourceId, extraAttributes: _*))
+    resourceId: String, extraAttributes: Map[Attribute[_], Any] = Map()): Result =
+    evaluate(new RequestCtx(extraAttributes ++ Map((Attributes.subjectId -> subjectId), (Attributes.actionId -> actionId), (Attributes.resourceId -> resourceId))))
 
   /**
    * Evaluate the policy of this PDP with given request context and generated incrementing
    * evaluation id and return the result. This will employ the attribute finder of this PDP.
    */
   def evaluate(ctx: RequestCtx): Result =
-    evaluate(new BasicEvaluationCtx(timestampGenerator.getTimestamp, ctx, attributeFinder, remoteEvaluator))
+    evaluate(timestampGenerator.getTimestamp, ctx)
 
   /**
    * Evaluate the policy of this PDP with given evaluation id and request context
@@ -101,7 +101,7 @@ class PDP(policy: AbstractPolicy,
       }
     }
     // return the result with the remaining obligations
-    new Result(result.decision, remainingObligations.toList, ctx.employedAttributes)
+    new Result(result.decision, remainingObligations.toList)
   }
   
   private def evaluateAbstractPolicy(policy: AbstractPolicy, ctx: EvaluationCtx) = policy match {
@@ -116,7 +116,7 @@ class PDP(policy: AbstractPolicy,
     if (policyIsApplicable(policy, ctx)) {
       val result = combinePolicies(subpolicies, pca, ctx)
       // add applicable obligations of our own
-      val applicableObligationActions = result.obligationActions ::: obligations.filter(_.fulfillOn == result.decision).map(_.action.getConcrete(ctx))
+      val applicableObligationActions = result.obligationActions ::: obligations.withFilter(_.fulfillOn == result.decision).map(_.action.getConcrete(ctx))
       val finalResult = Result(result.decision, applicableObligationActions)
       debug(s"FLOW: PolicySet #$fqid returned $finalResult")
       finalResult
@@ -130,7 +130,7 @@ class PDP(policy: AbstractPolicy,
     import CombinationDecision._
     var tmpResult = Result(NotApplicable)
     for(policy <- policies) {
-      val Result(currentDecision, obligationActions, _) = evaluateAbstractPolicy(policy, ctx)
+      val Result(currentDecision, obligationActions) = evaluateAbstractPolicy(policy, ctx)
       pca.combine(tmpResult.decision, currentDecision) match {
         case Temporary(decision) => tmpResult = Result(decision, tmpResult.obligationActions ::: obligationActions)
         case Final(decision) => return Result(decision, obligationActions)

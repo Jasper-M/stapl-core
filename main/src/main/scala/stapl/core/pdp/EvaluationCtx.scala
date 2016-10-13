@@ -23,6 +23,7 @@ import stapl.core.SUBJECT
 import stapl.core.RESOURCE
 import stapl.core.ACTION
 import stapl.core.ENVIRONMENT
+import scala.collection.mutable
 
 /**
  * The base class of the context for evaluating a policy. This context
@@ -42,7 +43,6 @@ trait EvaluationCtx {
   def actionId: String
   def remoteEvaluator: RemoteEvaluator
   def cachedAttributes: Map[Attribute[_], Any]
-  def employedAttributes: Map[Attribute[_], Any]
   protected[core] def findAttribute[T](attribute: Attribute[T]): T
   
   // TODO add type checking here
@@ -57,24 +57,15 @@ trait EvaluationCtx {
 class BasicEvaluationCtx(override val evaluationId: String, request: RequestCtx,
   finder: AttributeFinder, override val remoteEvaluator: RemoteEvaluator) extends EvaluationCtx with Logging {
 
-  override val subjectId: String = request.subjectId
+  override val subjectId: String = request.subjectId.getOrElse(throw new AttributeNotFoundException(evaluationId, "???", Attributes.subjectId))
 
-  override val resourceId: String = request.resourceId
+  override val resourceId: String = request.resourceId.getOrElse(throw new AttributeNotFoundException(evaluationId, "???", Attributes.resourceId))
 
-  override val actionId: String = request.actionId
+  override val actionId: String = request.actionId.getOrElse(throw new AttributeNotFoundException(evaluationId, "???", Attributes.actionId))
 
-  protected val attributeCache: scala.collection.mutable.Map[Attribute[_], Any] = scala.collection.mutable.Map() //scala.collection.concurrent.TrieMap()
+  protected val attributeCache: mutable.Map[Attribute[_], Any] = mutable.Map(request.attributes.toSeq :_*) //scala.collection.concurrent.TrieMap()
 
   override def cachedAttributes: Map[Attribute[_], Any] = attributeCache.toMap
-
-  // add all attributes given in the request to the attribute cache
-  for ((attribute, value) <- request.allAttributes) {
-    attributeCache(attribute) = value
-  }
-
-  protected val _employedAttributes: scala.collection.mutable.Map[Attribute[_], Any] = scala.collection.mutable.Map()
-
-  override def employedAttributes = _employedAttributes.toMap
 
   /**
    * Try to find the value of the given attribute. If the value is already
@@ -89,7 +80,6 @@ class BasicEvaluationCtx(override val evaluationId: String, request: RequestCtx,
     attributeCache.get(attribute) match {
       case Some(value) => {
         debug("FLOW: found value of " + attribute + " in cache: " + value)
-        _employedAttributes(attribute) = value
         value.asInstanceOf[T]
       }
       case None => { // Not in the cache
@@ -105,7 +95,6 @@ class BasicEvaluationCtx(override val evaluationId: String, request: RequestCtx,
             throw new AttributeNotFoundException(evaluationId, entityId, attribute)
           case Some(value) =>
             attributeCache(attribute) = value // add to cache
-            _employedAttributes(attribute) = value
             debug("FLOW: retrieved value of " + attribute + ": " + value + " and added to cache")
             value.asInstanceOf[T]
         }

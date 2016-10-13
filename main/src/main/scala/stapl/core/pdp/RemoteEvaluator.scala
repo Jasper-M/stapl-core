@@ -48,26 +48,6 @@ class RemoteEvaluator extends Modules[RemoteEvaluatorModule]{
     findAndEvaluate(modules)
   }
   
-  /**
-   * Tries to find the remote policy with id policyId and test whether it is applicable in this 
-   * EvaluationCtx. The result of the first RemoteEvaluatorModule that returns Some result is returned. 
-   * The others are ignored.
-   * 
-   * @return true if the remote policy is applicable, false otherwise
-   * @throws RemotePolicyNotFoundException if none of the RemoteEvaluatorModules can find the remote policy
-   */
-  def findAndIsApplicable(policyId: String, ctx: EvaluationCtx): Boolean = {
-    @tailrec
-    def findAndIsApplicable(modules: List[RemoteEvaluatorModule]): Boolean = modules match {
-      case module :: tail => module.findAndIsApplicable(policyId, ctx) match {
-        case Some(result) => result
-        case None => findAndIsApplicable(tail)
-      }
-      case Nil => throw new RemotePolicyNotFoundException(policyId)
-    }
-    findAndIsApplicable(modules)
-  }
-  
 }
 
 
@@ -82,12 +62,5 @@ trait RemoteEvaluatorModule {
    * will be returned.
    */
   def findAndEvaluate(policyId: String, ctx: EvaluationCtx): Option[Result]
-  
-  /**
-   * Returns the result of testing the applicability of the remote policy with id policyId 
-   * in this EvaluationCtx if he can find said policy. If the policy can't be found None
-   * will be returned.
-   */
-  def findAndIsApplicable(policyId: String, ctx: EvaluationCtx): Option[Boolean]
   
 }

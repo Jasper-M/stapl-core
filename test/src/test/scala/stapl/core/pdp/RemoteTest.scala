@@ -46,8 +46,7 @@ class RemoteTest extends AssertionsForJUnit {
       case "always-deny-policy" => Some(Result(Deny))
       case _ => None
     }
-    
-    override def findAndIsApplicable(policyId: String, ctx: EvaluationCtx) = ??? // shouldn't be called anyway
+
   }
   
   @Before def setup() {

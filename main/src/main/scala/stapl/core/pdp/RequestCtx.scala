@@ -16,7 +16,6 @@
 
 package stapl.core.pdp
 
-import scala.collection.mutable.Map
 import stapl.core.Attribute
 import stapl.core.SUBJECT
 import stapl.core.RESOURCE
@@ -34,23 +33,18 @@ import scala.reflect.runtime.universe.typeOf
  * given. Optionally, extra attributes can be provided (which should NOT
  * contain the ids of the subject, action and resource again).
  */
-class RequestCtx(val subjectId: String, val actionId: String, 
-    val resourceId: String, extraAttributes: (Attribute[_],Any)*) {
+class RequestCtx(val attributes: Map[Attribute[_], Any]) {
   
-  /*def this(subjectId: String, actionId: String, resourceId: String, extraAttributes: (Attribute,ConcreteValue)*) {
-    this(subjectId, actionId, resourceId, extraAttributes.map{ case (attr, c) => ((attr.name, attr.cType), c) }: _*)
-  }*/
+  def get(attribute: Attribute[_]) = attributes.get(attribute)
   
-  val allAttributes: Map[Attribute[_], Any] = Map(extraAttributes: _*)    
-      
-  // FIXME: these are not the same subject, resource and action as defined in BasicPolicy
-  // For now, this works because the repeated definitions are the same, but we should'nt replicate
-  // this definition. => idea: create a function to generate the subject, resoruce and action
-  // and use this everwhere where you need subject/resource/action.id
-  allAttributes += Attribute[String](SUBJECT, "id", typeOf[String]) -> subjectId
-  allAttributes += Attribute[String](RESOURCE, "id", typeOf[String]) -> resourceId
-  allAttributes += Attribute[String](ACTION, "id", typeOf[String]) -> actionId 
+  val subjectId: Option[String] = attributes.get(Attributes.subjectId).asInstanceOf[Option[String]]
+
+  val resourceId: Option[String] = attributes.get(Attributes.resourceId).asInstanceOf[Option[String]]
+
+  val actionId: Option[String] = attributes.get(Attributes.actionId).asInstanceOf[Option[String]]
   
-  override def toString(): String = f"${this.subjectId}--${this.actionId}->${this.resourceId} + ${this.allAttributes}" 
-      
+  
+  import Attributes._
+  override def toString(): String = s"${subjectId.getOrElse("???")}--${actionId.getOrElse("???")}->${resourceId.getOrElse("???")} + ${this.attributes}" 
+  
 }

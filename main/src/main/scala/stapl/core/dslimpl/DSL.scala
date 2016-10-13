@@ -42,17 +42,17 @@ trait DSL {
   class OnlyIdRule(private val id: String) {
   
     def :=(t: EffectConditionAndObligationActions): Rule =
-      new Rule(id)(t.effect, t.condition, List(t.obligationActions: _*))
+      new Rule(id, t.effect, t.condition, List(t.obligationActions: _*))
   
     def :=(t: EffectAndCondition): Rule =
-      new Rule(id)(t.effect, t.condition, List.empty)
+      new Rule(id, t.effect, t.condition, List.empty)
   
     def :=(t: EffectAndObligationActions): Rule =
-      new Rule(id)(t.effect, Value(true), List(t.obligationActions: _*))
+      new Rule(id, t.effect, Value(true), List(t.obligationActions: _*))
   
     def :=(effectKeyword: EffectKeyword): Rule = effectKeyword match {
-      case `deny` => new Rule(id)(Deny, Value(true), List.empty)
-      case `permit` => new Rule(id)(Permit, Value(true), List.empty)
+      case `deny` => new Rule(id, Deny, Value(true), List.empty)
+      case `permit` => new Rule(id, Permit, Value(true), List.empty)
     }
   
   }
