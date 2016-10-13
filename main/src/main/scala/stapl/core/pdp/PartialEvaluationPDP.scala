@@ -59,7 +59,8 @@ class PartialEvaluationPDP(policy: AbstractPolicy,
    * This will employ the attribute finder of this PDP.
    */
   def evaluate(attributes: Map[Attribute[_], Any]): Either[String, Result] =
-    evaluate(new RequestCtx(attributes))
+    evaluate(new RequestCtx(attributes)) 
+  //TODO improve api -> change Map[Attribute[_], Any] to Seq[(Attribute[_], Any)] ?
     
   def evaluate(evaluationId: String, attributes: Map[Attribute[_], Any]): Either[String, Result] =
     evaluate(evaluationId, new RequestCtx(attributes))
@@ -152,12 +153,11 @@ class PartialEvaluationPDP(policy: AbstractPolicy,
             case Temporary(decision) => tmpResult = Result(decision, tmpResult.obligationActions ::: obligationActions)
             case Final(decision) => return PECResult(Some(Result(decision, obligationActions)),List(),Set())
           }
-          CompletedPolicy(policy.id, peresult.result.get)
         } else {
           error = true
           attributes = peresult.attributes
-          policy
         }
+        peresult.policy
       } else {
         policy
       }
