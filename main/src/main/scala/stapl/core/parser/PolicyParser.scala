@@ -26,8 +26,9 @@ import stapl.core.AbstractPolicy
  */
 class PolicyParser {
   val settings = new Settings
-  settings.usejavacp.value = true
+  //settings.usejavacp.value = true
   settings.nowarnings.value = true
+  settings.embeddedDefaults[PolicyParser]
   val interpreter = new IMain(settings)
   
 
