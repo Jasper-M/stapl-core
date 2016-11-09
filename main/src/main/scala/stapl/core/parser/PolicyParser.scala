@@ -19,17 +19,17 @@ package stapl.core.parser
 import scala.tools.nsc.Settings
 import scala.tools.nsc.interpreter.IMain
 import stapl.core.AbstractPolicy
+import java.net.URLClassLoader
+import scala.reflect.runtime.universe._
+import scala.tools.reflect.ToolBox
+
 
 /**
  * A class for parsing policies dynamically from strings.
  * This parser employs the Scala interpreter.
  */
 class PolicyParser {
-  val settings = new Settings
-  //settings.usejavacp.value = true
-  settings.nowarnings.value = true
-  settings.embeddedDefaults[PolicyParser]
-  val interpreter = new IMain(settings)
+  val tb = runtimeMirror(getClass.getClassLoader).mkToolBox()
   
 
   private object lock
@@ -49,18 +49,11 @@ class PolicyParser {
    */
   def parse(policyString: String): AbstractPolicy = {
     val somePolicy = lock.synchronized {
-      interpreter.beQuietDuring({
-        interpreter.interpret(policyString)
-      })
-  
-      val somePolicy = interpreter.valueOfTerm(interpreter.mostRecentVar)
-      interpreter.reset()
-      somePolicy
+      tb.eval(tb.parse(policyString))
     }
 
     somePolicy match {
-      case None => throw new RuntimeException("Could not load policy from given policyString (returned None)")
-      case Some(policy: AbstractPolicy) => policy
+      case policy: AbstractPolicy => policy
       case _ => throw new RuntimeException("Could not load policy from given policyString (result was not an AbstractPolicy)")
     }
   }
