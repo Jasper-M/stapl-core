@@ -42,8 +42,8 @@ class PartialEvaluationTest extends AssertionsForJUnit {
         Rule("rule2") := permit iff (subject.b == "bar")
       )
     val pdp = new PartialEvaluationPDP(policy)
-    val Left(id) = pdp.evaluate(Map[Attribute[_],Any](subject.a -> "foo"))
-    val result = pdp.evaluate(id, Map[Attribute[_],Any](subject.b -> "bar"))
+    val Left(id) = pdp.evaluateNew(subject.a -> "foo")
+    val result = pdp.evaluatePartial(id, subject.b -> "bar")
     assertEquals(Right(Result(Permit)), result)
   }
   
@@ -54,7 +54,7 @@ class PartialEvaluationTest extends AssertionsForJUnit {
         Rule("rule2") := permit iff (subject.b == "bar")
       )
     val pdp = new PartialEvaluationPDP(policy)
-    val result = pdp.evaluate(Map[Attribute[_],Any](subject.a -> "foo"))
+    val result = pdp.evaluateNew(subject.a -> "foo")
     assertEquals(Right(Result(Deny)), result)
   }
   
@@ -65,8 +65,8 @@ class PartialEvaluationTest extends AssertionsForJUnit {
         Rule("rule2") := permit iff (subject.b == "bar")
       )
     val pdp = new PartialEvaluationPDP(policy)
-    val Left(id) = pdp.evaluate(Map[Attribute[_],Any](subject.a -> "foo"))
-    val result = pdp.evaluate(id, Map[Attribute[_],Any](subject.b -> "bar"))
+    val Left(id) = pdp.evaluateNew(subject.a -> "foo")
+    val result = pdp.evaluatePartial(id, subject.b -> "bar")
     assertEquals(Right(Result(Permit)), result)
   }
  

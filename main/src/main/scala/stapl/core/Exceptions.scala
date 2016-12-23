@@ -21,3 +21,5 @@ class AttributeNotFoundException(evaluationId: String, entityId: String, attribu
 class AttributeDoesNotExistException(name: String) extends RuntimeException(s"No attribute with name '$name' has been defined.")
 
 class RemotePolicyNotFoundException(policyId: String) extends RuntimeException(s"The remote policy with id $policyId wasn't found.")
+
+class AttributeClashException(doubles: Set[Attribute[_]]) extends RuntimeException(s"These attributes are provided more than once: ${doubles.mkString("[", ", ", "]")}")

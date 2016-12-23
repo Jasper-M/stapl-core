@@ -34,7 +34,7 @@ class PartialEvaluationPDP(policy: AbstractPolicy,
   
   private val timestampGenerator = new SimpleTimestampGenerator
   
-  private val partials: concurrent.Map[String, AbstractPolicy] = concurrent.TrieMap()
+  private val partials: concurrent.Map[String, (AbstractPolicy, RequestCtx)] = concurrent.TrieMap()
 
   /**
    * Set up this new PDP with an empty attribute finder (which does not find
@@ -58,26 +58,28 @@ class PartialEvaluationPDP(policy: AbstractPolicy,
    * and possibly extra attributes and return the result.
    * This will employ the attribute finder of this PDP.
    */
-  def evaluate(attributes: Map[Attribute[_], Any]): Either[String, Result] =
-    evaluate(new RequestCtx(attributes)) 
+  def evaluateNew(attributes: (Attribute[_], Any)*): Either[String, Result] =
+    evaluateNew(new RequestCtx(attributes.toMap)) 
   //TODO improve api -> change Map[Attribute[_], Any] to Seq[(Attribute[_], Any)] ?
     
-  def evaluate(evaluationId: String, attributes: Map[Attribute[_], Any]): Either[String, Result] =
-    evaluate(evaluationId, new RequestCtx(attributes))
+  def evaluatePartial(evaluationId: String, attributes: (Attribute[_], Any)*): Either[String, Result] =
+    evaluatePartial(evaluationId, new RequestCtx(attributes.toMap))
 
   /**
    * Evaluate the policy of this PDP with given request context and generated incrementing
    * evaluation id and return the result. This will employ the attribute finder of this PDP.
    */
-  def evaluate(ctx: RequestCtx): Either[String, Result] =
+  def evaluateNew(ctx: RequestCtx): Either[String, Result] =
     evaluate(new PEEvaluationCtx(timestampGenerator.getTimestamp, ctx, remoteEvaluator), policy)
 
   /**
    * Evaluate the policy of this PDP with given evaluation id and request context
    * and return the result. This will employ the attribute finder of this PDP.
    */
-  def evaluate(evaluationId: String, ctx: RequestCtx): Either[String, Result] =
-    evaluate(new PEEvaluationCtx(timestampGenerator.getTimestamp, ctx, remoteEvaluator), partials.getOrElse(evaluationId, throw new RuntimeException(s"Unknown evaluation id: $evaluationId")))
+  def evaluatePartial(evaluationId: String, ctx: RequestCtx): Either[String, Result] = {
+    val (policy, oldCtx) = partials.getOrElse(evaluationId, throw new RuntimeException(s"Unknown evaluation id: $evaluationId"))
+    evaluate(new PEEvaluationCtx(timestampGenerator.getTimestamp, oldCtx.mergeNew(ctx), remoteEvaluator), policy)
+  }
 
   
   private def evaluate(ctx: EvaluationCtx, policy: AbstractPolicy): Either[String, Result] = {
@@ -96,7 +98,7 @@ class PartialEvaluationPDP(policy: AbstractPolicy,
     
     resultOpt match {
       case None => 
-        partials.putIfAbsent(ctx.evaluationId, peresult.policy)
+        partials.putIfAbsent(ctx.evaluationId, (peresult.policy, ctx.request))
         Left(ctx.evaluationId)
       case Some(result) => Right(result)
     }
@@ -193,7 +195,7 @@ class PartialEvaluationPDP(policy: AbstractPolicy,
     // TODO Filter obligations? 
     //   - I don't think so?
     debug(s"FLOW: Remote Policy #$fqid returned $result")
-    PEResult(Some(result), policy, Set())
+    PEResult(Some(result), policy /*CompletedPolicy(policy.id, result)*/, Set())
   }
 }
 
@@ -206,7 +208,7 @@ object PartialEvaluationPDP {
   
   private object AttributeNotFound extends Throwable with NoStackTrace
   
-  private final class PEEvaluationCtx(override val evaluationId: String, request: RequestCtx,
+  private final class PEEvaluationCtx(override val evaluationId: String, override val request: RequestCtx,
     override val remoteEvaluator: RemoteEvaluator) extends EvaluationCtx {
   
     override def subjectId: String = request.subjectId.getOrElse(throw AttributeNotFound)

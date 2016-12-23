@@ -13,6 +13,7 @@ import stapl.core.Value
 import stapl.core.dsl.Subject
 import stapl.core.dsl.convertToValue
 import stapl.core.dsl.fromValue
+import stapl.core.pdp.RequestCtx
 
 object ExpressionsTest {
   
@@ -28,6 +29,7 @@ class ExpressionsTest extends AssertionsForJUnit {
 
   case class DummyCtx(f: String => Any) extends EvaluationCtx {
 
+    def request: RequestCtx = ???
     def evaluationId: String = ???
     def subjectId: String = ???
     def resourceId: String = ???

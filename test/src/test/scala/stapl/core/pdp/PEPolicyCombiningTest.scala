@@ -37,7 +37,7 @@ class PEPolicyCombiningTest extends AssertionsForJUnit {
         Rule("rule2") := permit iff true
       )
     val pdp = new PartialEvaluationPDP(policy)
-    val result = pdp.evaluate(Map[Attribute[_],Any]())
+    val result = pdp.evaluateNew()
     
     assertEquals(Right(Result(NotApplicable)), result)
   }
@@ -49,7 +49,7 @@ class PEPolicyCombiningTest extends AssertionsForJUnit {
         Rule("rule2") := permit iff false
       )
     val pdp = new PartialEvaluationPDP(policy)
-    val result = pdp.evaluate(Map[Attribute[_],Any]())
+    val result = pdp.evaluateNew()
     
     assertEquals(Right(Result(NotApplicable)), result)
   }
@@ -61,7 +61,7 @@ class PEPolicyCombiningTest extends AssertionsForJUnit {
         Rule("rule2") := permit iff true
       )
     val pdp = new PartialEvaluationPDP(policy)
-    val result = pdp.evaluate(Map[Attribute[_],Any]())
+    val result = pdp.evaluateNew()
     
     assertEquals(Right(Result(Permit)), result)
   }
@@ -73,7 +73,7 @@ class PEPolicyCombiningTest extends AssertionsForJUnit {
         Rule("rule2") := permit iff false
       )
     val pdp = new PartialEvaluationPDP(policy)
-    val result = pdp.evaluate(Map[Attribute[_],Any]())
+    val result = pdp.evaluateNew()
     
     assertEquals(Right(Result(Deny)), result)
   }
@@ -85,7 +85,7 @@ class PEPolicyCombiningTest extends AssertionsForJUnit {
         Rule("rule2") := deny iff true
       )
     val pdp = new PartialEvaluationPDP(policy)
-    val result = pdp.evaluate(Map[Attribute[_],Any]())
+    val result = pdp.evaluateNew()
     
     assertEquals(Right(Result(Permit)), result)
   }
@@ -97,7 +97,7 @@ class PEPolicyCombiningTest extends AssertionsForJUnit {
         Rule("rule2") := deny iff true
       )
     val pdp = new PartialEvaluationPDP(policy)
-    val result = pdp.evaluate(Map[Attribute[_],Any]())
+    val result = pdp.evaluateNew()
     
     assertEquals(Right(Result(Deny)), result)
   }
@@ -109,7 +109,7 @@ class PEPolicyCombiningTest extends AssertionsForJUnit {
         Rule("rule2") := deny iff false
       )
     val pdp = new PartialEvaluationPDP(policy)
-    val result = pdp.evaluate(Map[Attribute[_],Any]())
+    val result = pdp.evaluateNew()
     
     assertEquals(Right(Result(Permit)), result)
   }
@@ -121,7 +121,7 @@ class PEPolicyCombiningTest extends AssertionsForJUnit {
         Rule("rule2") := permit iff true
       )
     val pdp = new PartialEvaluationPDP(policy)
-    val result = pdp.evaluate(Map[Attribute[_],Any]())
+    val result = pdp.evaluateNew()
     
     assertEquals(Right(Result(Deny)), result)
   }
@@ -133,7 +133,7 @@ class PEPolicyCombiningTest extends AssertionsForJUnit {
         Rule("rule2") := deny iff true
       )
     val pdp = new PartialEvaluationPDP(policy)
-    val result = pdp.evaluate(Map[Attribute[_],Any]())
+    val result = pdp.evaluateNew()
     
     assertEquals(Right(Result(Permit)), result)
   }
@@ -145,7 +145,7 @@ class PEPolicyCombiningTest extends AssertionsForJUnit {
         Rule("rule2") := deny iff false
       )
     val pdp = new PartialEvaluationPDP(policy)
-    val result = pdp.evaluate(Map[Attribute[_],Any]())
+    val result = pdp.evaluateNew()
     
     assertEquals(Right(Result(Permit)), result)
   }
@@ -157,7 +157,7 @@ class PEPolicyCombiningTest extends AssertionsForJUnit {
         Rule("rule2") := permit iff true
       )
     val pdp = new PartialEvaluationPDP(policy)
-    val result = pdp.evaluate(Map[Attribute[_],Any]())
+    val result = pdp.evaluateNew()
     
     assertEquals(Right(Result(Permit)), result)
   }
@@ -175,7 +175,7 @@ class PEPolicyCombiningTest extends AssertionsForJUnit {
         )
       )
     val pdp = new PartialEvaluationPDP(policy)
-    val result = pdp.evaluate(Map[Attribute[_],Any]())
+    val result = pdp.evaluateNew()
     
     assertEquals(Right(Result(Permit)), result)
   }

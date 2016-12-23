@@ -66,8 +66,8 @@ class PDP(policy: AbstractPolicy,
    * This will employ the attribute finder of this PDP.
    */
   def evaluate(subjectId: String, actionId: String,
-    resourceId: String, extraAttributes: Map[Attribute[_], Any] = Map()): Result =
-    evaluate(new RequestCtx(extraAttributes ++ Map((Attributes.subjectId -> subjectId), (Attributes.actionId -> actionId), (Attributes.resourceId -> resourceId))))
+    resourceId: String, extraAttributes: (Attribute[_], Any)*): Result =
+    evaluate(new RequestCtx(extraAttributes.toMap ++ Map((Attributes.subjectId -> subjectId), (Attributes.actionId -> actionId), (Attributes.resourceId -> resourceId))))
 
   /**
    * Evaluate the policy of this PDP with given request context and generated incrementing

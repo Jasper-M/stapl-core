@@ -37,6 +37,8 @@ import scala.collection.mutable
  */
 trait EvaluationCtx {
 
+  def request: RequestCtx
+  
   def evaluationId: String
   def subjectId: String
   def resourceId: String
@@ -54,7 +56,7 @@ trait EvaluationCtx {
  * stores the subject id, the resource id, the action id and stores found
  * attribute values in a cache for this evaluation context.
  */
-class BasicEvaluationCtx(override val evaluationId: String, request: RequestCtx,
+class BasicEvaluationCtx(override val evaluationId: String, override val request: RequestCtx,
   finder: AttributeFinder, override val remoteEvaluator: RemoteEvaluator) extends EvaluationCtx with Logging {
 
   override val subjectId: String = request.subjectId.getOrElse(throw new AttributeNotFoundException(evaluationId, "???", Attributes.subjectId))

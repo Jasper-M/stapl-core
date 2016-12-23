@@ -21,6 +21,7 @@ import stapl.core.SUBJECT
 import stapl.core.RESOURCE
 import stapl.core.ACTION
 import scala.reflect.runtime.universe.typeOf
+import stapl.core.AttributeClashException
 
 /**
  * A class used for representing the context of a request.
@@ -43,6 +44,15 @@ class RequestCtx(val attributes: Map[Attribute[_], Any]) {
 
   val actionId: Option[String] = attributes.get(Attributes.actionId).asInstanceOf[Option[String]]
   
+  /**
+   * Creates a new RequestCtx with all the Attributes of this and that RequestCtx. 
+   * Throws an AttributeClashException if both RequestCtxs contain the same Attribute.
+   */
+  def mergeNew(that: RequestCtx): RequestCtx = {
+    val doubles = that.attributes.keySet.intersect(this.attributes.keySet)
+    if (doubles.nonEmpty) throw new AttributeClashException(doubles)
+    new RequestCtx(this.attributes ++ that.attributes)
+  }
   
   import Attributes._
   override def toString(): String = s"${subjectId.getOrElse("???")}--${actionId.getOrElse("???")}->${resourceId.getOrElse("???")} + ${this.attributes}" 
